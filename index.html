@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Product Billing — Camera Recognition</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============ HEADER ============ -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">⟡</span>
+        <div class="brand-text">
+          <h1>Smart Product Billing</h1>
+          <p class="brand-sub">Camera-based product recognition — no barcodes</p>
+        </div>
+      </div>
+      <div id="cvStatus" class="cv-status" role="status">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="cvStatusText">Loading vision engine…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- ============ LEFT COLUMN: SCANNER + RECOGNITION ============ -->
+    <section class="col col-scan">
+
+      <!-- Camera Scanner -->
+      <div class="card scanner-card">
+        <div class="card-head">
+          <h2>Scanner</h2>
+          <span id="stateTag" class="state-tag" data-state="idle">Camera Off</span>
+        </div>
+
+        <div class="scanner-viewport">
+          <video id="video" playsinline autoplay muted></video>
+          <canvas id="overlay"></canvas>
+          <canvas id="workCanvas" hidden></canvas>
+          <div class="scan-frame" aria-hidden="true">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+          </div>
+          <div id="cameraPlaceholder" class="camera-placeholder">
+            <p>Camera preview will appear here</p>
+          </div>
+        </div>
+
+        <div class="scanner-status">
+          <span id="recognitionStatus" class="status-text">Camera Ready</span>
+          <span id="confidenceText" class="confidence-text"></span>
+        </div>
+
+        <div class="scanner-controls">
+          <button id="startCameraBtn" class="btn btn-primary">Start Camera</button>
+          <button id="stopCameraBtn" class="btn btn-ghost" disabled>Stop Camera</button>
+        </div>
+
+        <p id="errorBanner" class="error-banner" hidden></p>
+      </div>
+
+      <!-- Recognized Product -->
+      <div class="card product-card">
+        <div class="card-head">
+          <h2>Recognized Product</h2>
+        </div>
+
+        <div id="productEmptyState" class="product-empty">
+          <p>Point the camera at a product to begin.</p>
+        </div>
+
+        <div id="productDetails" class="product-details" hidden>
+          <div class="product-image-wrap">
+            <img id="productImage" src="" alt="" hidden />
+            <span id="productImagePlaceholder" class="product-image-placeholder">Add it here</span>
+          </div>
+          <div class="product-info">
+            <h3 id="productName">—</h3>
+            <dl class="product-meta">
+              <div><dt>Pricing</dt><dd id="productPricePerGramLine">—</dd></div>
+              <div id="productBasePackRow" hidden><dt>Base Pack</dt><dd id="productBasePackLine">—</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Requirement + Calculation -->
+      <div class="card qty-card" id="qtyCard">
+        <div class="card-head">
+          <h2>How much does the customer want?</h2>
+        </div>
+
+        <div class="measure-toggle" role="tablist" aria-label="Measure by">
+          <button id="measureByWeightBtn" class="toggle-btn is-active" role="tab" aria-selected="true" disabled>By Weight</button>
+          <button id="measureByAmountBtn" class="toggle-btn" role="tab" aria-selected="false" disabled>By Amount</button>
+        </div>
+
+        <div id="weightModeField">
+          <label class="field-label" for="weightInput">Enter Weight (grams)</label>
+          <input
+            type="number"
+            id="weightInput"
+            class="measure-input"
+            placeholder="e.g. 100"
+            min="0"
+            step="any"
+            disabled
+          />
+        </div>
+
+        <div id="amountModeField" hidden>
+          <label class="field-label" for="amountInput">Customer Wants (₹)</label>
+          <input
+            type="number"
+            id="amountInput"
+            class="measure-input"
+            placeholder="e.g. 10"
+            min="0"
+            step="any"
+            disabled
+          />
+        </div>
+
+        <p id="measureError" class="field-error" hidden></p>
+
+        <div class="calc-preview">
+          <div class="calc-preview-item">
+            <span>Weight</span>
+            <strong id="previewWeight">0.00g</strong>
+          </div>
+          <div class="calc-preview-item">
+            <span>Amount</span>
+            <strong id="previewAmount">₹0.00</strong>
+          </div>
+        </div>
+
+        <div class="qty-actions">
+          <button id="addToBillBtn" class="btn btn-primary" disabled>Add to Bill</button>
+          <button id="cancelProductBtn" class="btn btn-ghost" disabled>Cancel</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ RIGHT COLUMN: BILL ============ -->
+    <section class="col col-bill">
+      <div class="card bill-card">
+        <div class="card-head">
+          <h2>Bill</h2>
+          <button id="clearBillBtn" class="btn btn-danger-ghost">Clear Bill</button>
+        </div>
+
+        <div class="bill-table-wrap">
+          <table class="bill-table">
+            <thead>
+              <tr>
+                <th class="col-no">No.</th>
+                <th>Product</th>
+                <th>Price/g</th>
+                <th>Weight</th>
+                <th>Amount</th>
+                <th class="col-action">Action</th>
+              </tr>
+            </thead>
+            <tbody id="billBody">
+              <tr id="billEmptyRow">
+                <td colspan="6" class="bill-empty">No items yet — recognize a product to get started.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grand-total-row">
+          <span>Grand Total</span>
+          <strong id="grandTotal">₹0.00</strong>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Runs entirely in your browser. Camera frames are never uploaded anywhere.</p>
+  </footer>
+
+  <!-- Delete/quantity-edit confirmation + clear-bill confirmation -->
+  <div id="confirmModal" class="modal" hidden>
+    <div class="modal-card">
+      <p id="confirmModalText">Are you sure?</p>
+      <div class="modal-actions">
+        <button id="confirmModalCancel" class="btn btn-ghost">Cancel</button>
+        <button id="confirmModalOk" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OpenCV.js — recognition engine. onOpenCvReady is called once WASM finishes loading. -->
+  <script async src="https://docs.opencv.org/4.9.0/opencv.js" onload="window.__openCvScriptLoaded = true;" onerror="window.__openCvScriptFailed = true;"></script>
+
+  <script src="products.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
