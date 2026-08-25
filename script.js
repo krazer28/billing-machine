@@ -1,5 +1,5 @@
 /**
- * script.js
+ * script.js 
  * -----------------------------------------------------------------------
  * Smart Product Billing — app logic.
  *
